@@ -1,5 +1,7 @@
 require 'yaml'
 require 'net/https'
+require 'rexml/document'
+include REXML
 
 #Loading YAML variables
 config = YAML.load_file("sn_do_config.yml")
@@ -22,4 +24,15 @@ end
 
 
 incident_list = getincidents('XML')
-puts incident_list.body
+xmldoc = Document.new(incident_list.body)
+xmldoc.elements.each("xml/incident/number") do |inc| 
+	puts inc.text
+	end
+
+	# incident_list = Array.new
+	# number = xmldoc.elements[count, "xml/incident/number").text
+	# short_description = xmldoc.elements[count]("xml/incident/short_description").text
+	# sys_created_on = xmldoc.elements[count]("xml/incident/sys_created_on").text
+	# details = {number: number, desc: short_description, date: sys_created_on}
+	# incident_list << details
+	# count = count + 1
