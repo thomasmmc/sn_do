@@ -3,6 +3,7 @@ require 'net/https'
 require 'rexml/document'
 include REXML
 
+
 #Loading YAML variables
 config = YAML.load_file("sn_do_config.yml")
 instance_name = config["instance_name"]
@@ -43,6 +44,39 @@ def count_incidents_by_datediff(array, hash, operator, diff)
 	count
 end
 
+# get incident number by diffrence in date value
+def incidentdetails_by_datediff(array, hash, operator, diff)
+	today = Date.today
+	results = Array.new
+	array.each do |inc|
+		#comparing each opened date with today via MonthJulianDay (mjd) and couting any that are <= value
+		if operator == 'less'
+			results << inc if (today.mjd - Date.parse(inc[hash]).mjd) <= diff
+		elsif operator == 'more'
+			results << inc if (today.mjd - Date.parse(inc[hash]).mjd) >= diff
+		elsif operator == 'eq'
+			results << inc if (today.mjd - Date.parse(inc[hash]).mjd) == diff
+		else
+			return 'not a valid operator'
+		end
+	end
+	results
+end
+
+#Generates a indicent url based on instance and sys_id, this is used to quickly access an incident
+def generate_incident_url(instance, sys_id)
+	url = "https://#{instance}.service-now.com/nav_to.do?uri=incident.do?sys_id=#{sys_id}"
+	url
+end
+
+#get incident details
+def get_incident_details(array, number)
+	results = array.select do |inc|
+		inc[:number] == number
+	end
+	results
+end
+
 #create our incident list array to capture the data
 incident_list = Array.new
 
@@ -53,6 +87,7 @@ xmldoc = Document.new(httpresult.body)
 xmldoc.elements.each("xml/incident") do |inc|
 	#we are accesing each element we want and adding the text to a variable
 	number = inc.elements['number'].text
+	sys_id = inc.elements['sys_id'].text
 	opened = inc.elements['opened_at'].text
 	short_desc = inc.elements['short_description'].text
 	category = inc.elements['category'].text
@@ -60,17 +95,28 @@ xmldoc.elements.each("xml/incident") do |inc|
 	incident_state = inc.elements['incident_state'].text
 	updated = inc.elements['sys_updated_on'].text
 	# we are now loding are variables into a hash
-	details = {number: number, desc: short_desc, opened: opened, category: category, priority: priority, incident_state: incident_state, updated: updated}
+	details = {number: number, sys_id: sys_id, desc: short_desc, opened: opened, category: category, priority: priority, incident_state: incident_state, updated: updated}
 	#finaly we are loding our hashes into our array
 	incident_list << details
 end
 
-
 total_incidents = incident_list.count
 openedlast_24 = count_incidents_by_datediff(incident_list,:opened,'less',1)
-olderthen7days = count_incidents_by_datediff(incident_list,:opened,'less',7)
+olderthen7days = count_incidents_by_datediff(incident_list,:opened,'more',7)
 notupdated7days = count_incidents_by_datediff(incident_list,:updated,'more',7)
+notupdated7days_details = incidentdetails_by_datediff(incident_list,:updated,'more',7)
 
-puts openedlast_24
-puts olderthen7days
-puts notupdated7days
+#Now we are going to add a url to each hash based on sys_id and instance
+notupdated7days_details.each do |inc|
+	link = generate_incident_url(instance_name, inc[:sys_id])
+	inc[:url] = link
+end
+
+puts "Total Incidents in queue #{total_incidents}"
+puts "Total Incidents last day #{openedlast_24}"
+puts "Total Incidents older the 7 days #{olderthen7days}"
+puts "Total Incidents not updated 7 days #{notupdated7days}"
+puts notupdated7days_details.first
+
+
+
