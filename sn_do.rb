@@ -3,7 +3,6 @@ require 'net/https'
 require 'rexml/document'
 include REXML
 
-
 #Loading YAML variables
 config = YAML.load_file("sn_do_config.yml")
 instance_name = config["instance_name"]
@@ -16,7 +15,7 @@ assign_group_id = config["assign_group_id"]
 
 #this method is for getting incidents by query_param and query value, we also need to specify the format
 def getincidents(format, query_param, query_value)
-	url = URI.parse("#{@sninstance_url}incident_list.do?#{format}&sysparm_query=#{query_param}=#{query_value}")
+	url = URI.parse("#{@sninstance_url}incident_list.do?#{format}&sysparm_query=active=true%5E#{query_param}=#{query_value}")
 	http = Net::HTTP.new(url.host, url.port)
 	http.use_ssl = true
 	http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -83,20 +82,21 @@ incident_list = Array.new
 #Running getincidents for the assignment group specified in the yaml
 httpresult = getincidents('XML','assignment_group', assign_group_id)
 xmldoc = Document.new(httpresult.body)
+#xmldoc = Document.new(xmlraw)
 #Now we are going to reiderate over all the XML data and get some info into an array
 xmldoc.elements.each("xml/incident") do |inc|
-	#we are accesing each element we want and adding the text to a variable
-	number = inc.elements['number'].text
-	sys_id = inc.elements['sys_id'].text
-	opened = inc.elements['opened_at'].text
-	short_desc = inc.elements['short_description'].text
-	category = inc.elements['category'].text
-	priority = inc.elements['priority'].text
-	incident_state = inc.elements['incident_state'].text
-	updated = inc.elements['sys_updated_on'].text
-	# we are now loding are variables into a hash
-	details = {number: number, sys_id: sys_id, desc: short_desc, opened: opened, category: category, priority: priority, incident_state: incident_state, updated: updated}
-	#finaly we are loding our hashes into our array
+	details = Hash.new
+	#we are accesing each element we want and adding the text our hash
+	details[:number] = inc.elements['number'].text
+	details[:sys_id] = inc.elements['sys_id'].text
+	details[:opened] = inc.elements['opened_at'].text
+	details[:short_desc] = inc.elements['short_description'].text
+	details[:category] = inc.elements['category'].text
+	details[:priority] = inc.elements['priority'].text
+	details[:incident_state] = inc.elements['incident_state'].text
+	details[:updated] = inc.elements['sys_updated_on'].text
+	details[:updated_by] = inc.elements['sys_updated_by'].text
+	#finaly we are loding our hash into our array
 	incident_list << details
 end
 
@@ -115,8 +115,14 @@ end
 puts "Total Incidents in queue #{total_incidents}"
 puts "Total Incidents last day #{openedlast_24}"
 puts "Total Incidents older the 7 days #{olderthen7days}"
-puts "Total Incidents not updated 7 days #{notupdated7days}"
-puts notupdated7days_details.first
+puts "Total Incidents not updated 7 days #{notupdated7days}" 
+if notupdated7days_details.any?
+	info = "<b>Details on Incidents not updated for 7 days</b>\n"
+	notupdated7days_details.each do |inc|
+		info << %Q^Number: <a href="#{inc[:url]}">#{inc[:number]}</a> Priority: #{inc[:priority]} Updated_by: #{inc[:updated_by]} Desc: #{inc[:short_desc]}\n^
+	end
+end
+puts info
 
 
 
