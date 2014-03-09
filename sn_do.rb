@@ -3,7 +3,6 @@ require 'net/https'
 require 'rexml/document'
 include REXML
 
-
 #Loading YAML variables
 config = YAML.load_file("sn_do_config.yml")
 instance_name = config["instance_name"]
@@ -25,6 +24,25 @@ def getincidents(format, query_param, query_value)
   	http.request(req)
 end
 
+# count incidents by diffrence in date value
+def count_incidents_by_datediff(array, hash, operator, diff)
+	count = 0
+	today = Date.today
+	array.each do |inc|
+		#comparing each opened date with today via MonthJulianDay (mjd) and couting any that are <= value
+		if operator == 'less'
+			count = count + 1  if (today.mjd - Date.parse(inc[hash]).mjd) <= diff 
+		elsif operator == 'more'
+			count = count + 1  if (today.mjd - Date.parse(inc[hash]).mjd) >= diff
+		elsif operator == 'eq'
+			count = count + 1  if (today.mjd - Date.parse(inc[hash]).mjd) == diff
+		else
+			return 'not a valid operator'
+		end
+	end
+	count
+end
+
 #create our incident list array to capture the data
 incident_list = Array.new
 
@@ -39,8 +57,20 @@ xmldoc.elements.each("xml/incident") do |inc|
 	short_desc = inc.elements['short_description'].text
 	category = inc.elements['category'].text
 	priority = inc.elements['priority'].text
+	incident_state = inc.elements['incident_state'].text
+	updated = inc.elements['sys_updated_on'].text
 	# we are now loding are variables into a hash
-	details = {number: number, desc: short_desc, opened: opened, category: category, priority: priority}
+	details = {number: number, desc: short_desc, opened: opened, category: category, priority: priority, incident_state: incident_state, updated: updated}
 	#finaly we are loding our hashes into our array
-	incident_list.push(details)
+	incident_list << details
 end
+
+
+total_incidents = incident_list.count
+openedlast_24 = count_incidents_by_datediff(incident_list,:opened,'less',1)
+olderthen7days = count_incidents_by_datediff(incident_list,:opened,'less',7)
+notupdated7days = count_incidents_by_datediff(incident_list,:updated,'more',7)
+
+puts openedlast_24
+puts olderthen7days
+puts notupdated7days
