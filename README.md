@@ -4,10 +4,12 @@ This is to talk to ServiceNow instances and generate statistics and other useful
 This is currently under aplha testing and will be updated rapidly
 
 ## gems
-...require 'yaml'
-...require 'net/https'
-...require 'rexml/document'
-...require 'net/smtp'
+``` ruby
+require 'yaml'
+require 'net/https'
+require 'rexml/document'
+require 'net/smtp'
+```
 
 ## config file
 Below you will see the vairables we are setting for your ServiceNow instance
