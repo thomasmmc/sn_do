@@ -95,9 +95,9 @@ end
 #create our incident list array to capture the data
 incident_list = Array.new
 #Running getincidents for the assignment group specified in the yaml
-#httpresult = getincidents('XML','assignment_group', assign_group_id)
-#xmldoc = Document.new(httpresult.body)
-xmldoc = Document.new File.new('sample.xml')
+httpresult = getincidents('XML','assignment_group', assign_group_id)
+xmldoc = Document.new(httpresult.body)
+#xmldoc = Document.new File.new('sample.xml')
 #Now we are going to reiderate over all the XML data and get some info into an array
 xmldoc.elements.each("xml/incident") do |inc|
 	details = Hash.new
