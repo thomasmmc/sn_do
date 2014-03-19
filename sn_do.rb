@@ -1,8 +1,10 @@
 require 'net/https'
 require 'rexml/document'
+require 'date'
 module SN_DO
 	#For accessing Incident related information out of ServiceNow
 	class INC
+			@@today = Date.today
 		def initialize(instance_name, username, password)
 			return if instance_name.nil?
 			#set service now instance name
@@ -27,7 +29,6 @@ module SN_DO
 			#create our incident list array to capture the data
 			parsed = Array.new
 			xmldoc = REXML::Document.new(xml.body)
-			#xmldoc = Document.new File.new('sample.xml')
 			#Now we are going to reiderate over all the XML data and get some info into an array
 			xmldoc.elements.each("xml/incident") do |inc|
 				details = Hash.new
@@ -48,17 +49,16 @@ module SN_DO
 		end
 
 		# count incidents by diffrence in date value
-		def self.count_datediff(array, hash, operator, diff)
+		def self.count_datediff(array, query_param, operator, diff)
 			count = 0
-			today = Date.today
 			array.each do |inc|
 				#comparing each opened date with today via MonthJulianDay (mjd) and couting any that are <= value
 				if operator == 'less'
-					count = count + 1  if (today.mjd - Date.parse(inc[hash]).mjd) <= diff 
+					count = count + 1  if (@@today.mjd - Date.parse(inc[query_param.to_sym]).mjd) <= diff 
 				elsif operator == 'more'
-					count = count + 1  if (today.mjd - Date.parse(inc[hash]).mjd) >= diff
+					count = count + 1  if (@@today.mjd - Date.parse(inc[query_param.to_sym]).mjd) >= diff
 				elsif operator == 'eq'
-					count = count + 1  if (today.mjd - Date.parse(inc[hash]).mjd) == diff
+					count = count + 1  if (@@today.mjd - Date.parse(inc[query_param.to_sym]).mjd) == diff
 				else
 					return 'not a valid operator'
 				end
@@ -67,17 +67,16 @@ module SN_DO
 		end
 
 		# get incidents by diffrence in date value
-		def self.details_datediff(array, hash, operator, diff)
-			today = Date.today
+		def self.details_datediff(array, query_param, operator, diff)
 			results = Array.new
 			array.each do |inc|
 				#comparing each opened date with today via MonthJulianDay (mjd) and couting any that are <= value
 				if operator == 'less'
-					results << inc if (today.mjd - Date.parse(inc[hash]).mjd) <= diff
+					results << inc if (@@today.mjd - Date.parse(inc[query_param.to_sym]).mjd) <= diff
 				elsif operator == 'more'
-					results << inc if (today.mjd - Date.parse(inc[hash]).mjd) >= diff
+					results << inc if (@@today.mjd - Date.parse(inc[query_param.to_sym]).mjd) >= diff
 				elsif operator == 'eq'
-					results << inc if (today.mjd - Date.parse(inc[hash]).mjd) == diff
+					results << inc if (@@today.mjd - Date.parse(inc[query_param.to_sym]).mjd) == diff
 				else
 					return 'not a valid operator'
 				end
@@ -103,9 +102,9 @@ module SN_DO
 			results = array.select do |inc|
 				case type
 				when 'in'
-				inc[query_param] == query_value
+				inc[query_param.to_sym] == query_value
 				when 'out'
-				inc[query_param] != query_value
+				inc[query_param.to_sym] != query_value
 				end
 			end
 			results
