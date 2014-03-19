@@ -24,13 +24,14 @@ require 'net/smtp'
 ### brief example 
 for using SN_DO and connecting to ServiceNow and getting a count
 ``` ruby
+# SN_DO::INC.new('instance_name','username','password')
 SN_DO::INC.new('demo017','admin','admin')
 httpresult = SN_DO::INC.retrieve('XML','assignment_group', assign_group_id)
 incident_list = SN_DO::INC.parse_xml(httpresult)
 total_incidents = incident_list.count
 puts total_incidents
 ```
-`example.rb` is goign to have more detailed example then this
+`example.rb` is going to have more detailed example then this
 
 ## todo list
 * build tests
