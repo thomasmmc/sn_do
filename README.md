@@ -1,28 +1,31 @@
 # sn_do
-This is to talk to ServiceNow instances and generate statistics and other useful information
+This is to talk to ServiceNow instances to work thru the data, generate statistics and other useful information
 
 This is currently under aplha testing and will be updated rapidly
 
-## gems
+## Whats here:
+
+* `sn_do.rb` - This is our SN_DO module and Classes for interacting with Incidents and Assets
+* `example.rb` - How to use SN_DO in a useful way calling most methods to meet some goals
+
+## gems used
 ``` ruby
-require 'yaml'
 require 'net/https'
 require 'rexml/document'
 require 'net/smtp'
 ```
 
-## config file
-Below you will see the vairables we are setting for your ServiceNow instance
-
-### ServiceNow instance and assignment group settings
+### Example for using SN_DO and connecting to ServiceNow and getting a count
+`example.rb` is goign to have more detailed example then this
 ``` ruby
-instance_name: demo017
-username: admin
-password: admin
-assign_group_id: d625dccec0a8016700a222a0f7900d06
-assign_group_name: Software
+SN_DO::INC.new('demo017','admin','admin')
+httpresult = SN_DO::INC.retrieve('XML','assignment_group', assign_group_id)
+incident_list = SN_DO::INC.parse_xml(httpresult)
+total_incidents = incident_list.count
+puts total_incidents
 ```
 
 ## todo list
-* refactor, refactor, refactor
-* remove built in email function (part of alpha testing)
+* build tests
+* document things better
+* build out the asset class
