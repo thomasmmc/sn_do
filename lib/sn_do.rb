@@ -25,6 +25,15 @@ module SN_DO
 		  	http.request(req)
 		end
 
+		def self.getelements(xml)
+			firstelm = xmldoc.elements.to_a("xml/incident").first
+			elements = Array.new
+			firstelm.each_recursive do |elm|
+			elements << elm.name.to_s
+			end
+			elements
+		end
+
 		def self.parse_xml(xml)
 			#create our incident list array to capture the data
 			parsed = Array.new
