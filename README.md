@@ -27,14 +27,13 @@ for using SN_DO and connecting to ServiceNow and getting a count
 # SN_DO::INC.new('instance_name','username','password')
 SN_DO::INC.new('demo017','admin','admin')
 httpresult = SN_DO::INC.retrieve('XML','assignment_group', assign_group_id)
-incident_list = SN_DO::INC.parse_xml(httpresult)
+incident_list = SN_DO::INC.parse_xml(httpresult.body)
 put incident_list.count
 
 ```
 `example.rb` is going to have more detailed example then this
 
 ## todo list
-* parse all standard SN fields in the XML
 * build tests
 * document things better
 * build out the asset class
