@@ -34,23 +34,21 @@ module SN_DO
 			elements
 		end
 
-		def self.parse_xml(xml)
-			#create our incident list array to capture the data
+		def self.parse_xml(xml, elements=nil)
+			#create our parsed array to capture the data
 			parsed = Array.new
+			#now we are checking to see if there is redefined elements list or we should find them ourself
+			if elements == nil
+				elements = getelements(xml)
+			end
 			xmldoc = REXML::Document.new(xml.body)
 			#Now we are going to reiderate over all the XML data and get some info into an array
 			xmldoc.elements.each("xml/incident") do |inc|
 				details = Hash.new
 				#we are accesing each element we want and adding the text our hash
-				details[:number] = inc.elements['number'].text
-				details[:sys_id] = inc.elements['sys_id'].text
-				details[:opened] = inc.elements['opened_at'].text
-				details[:short_desc] = inc.elements['short_description'].text
-				details[:category] = inc.elements['category'].text
-				details[:priority] = inc.elements['priority'].text
-				details[:incident_state] = inc.elements['incident_state'].text
-				details[:updated] = inc.elements['sys_updated_on'].text
-				details[:updated_by] = inc.elements['sys_updated_by'].text
+				elements.each do |element|
+					details[element.to_sym] = inc.elements[element].text
+				end
 				#finaly we are loding our hash into our array
 				parsed << details
 				end
