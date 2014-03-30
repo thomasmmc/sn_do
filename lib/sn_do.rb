@@ -26,7 +26,7 @@ module SN_DO
 		end
 
 		def self.getelements(xml)
-			firstelm = xmldoc.elements.to_a("xml/incident").first
+			firstelm = xml.elements.to_a("xml/incident").first
 			elements = Array.new
 			firstelm.each_recursive do |elm|
 			elements << elm.name.to_s
@@ -37,11 +37,11 @@ module SN_DO
 		def self.parse_xml(xml, elements=nil)
 			#create our parsed array to capture the data
 			parsed = Array.new
+			xmldoc = REXML::Document.new(xml)
 			#now we are checking to see if there is redefined elements list or we should find them ourself
 			if elements == nil
-				elements = getelements(xml)
+				elements = getelements(xmldoc)
 			end
-			xmldoc = REXML::Document.new(xml.body)
 			#Now we are going to reiderate over all the XML data and get some info into an array
 			xmldoc.elements.each("xml/incident") do |inc|
 				details = Hash.new
