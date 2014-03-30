@@ -1,5 +1,7 @@
 #gets sample data from service now demo enviroment
-require_relative 'sn_do'
+require_relative 'lib/sn_do'
+require 'rexml/document'
+include REXML
 
 #this is the group that we are getting data from in ServiceNow
 assign_group_id = '8a4dde73c6112278017a6a4baf547aa7'
@@ -10,9 +12,10 @@ SN_DO::INC.new('demo017','admin','admin')
 
 #SN_DO::INC.retrieve('format','query_param','query_value')
 httpresult = SN_DO::INC.retrieve('XML','assignment_group', assign_group_id)
-
+#xmldoc = File.new('sample.xml')
+#xmldoc = Document.new File.new('sample2.xml')
 #SN_DO::INC.parse_xml('xml')
-incident_list = SN_DO::INC.parse_xml(httpresult)
+incident_list = SN_DO::INC.parse_xml(httpresult.body)
 
 #basic count of total incidents
 total_incidents = incident_list.count
@@ -25,22 +28,22 @@ puts "Incidents initialized #{filtered_incidents.count}"
 
 #how to get a count of incidents by datediff where the value opened is less then 1
 #SN_DO::INC.count_datediff(array, query_param, operator, diff)
-openedlast_24 = SN_DO::INC.count_datediff(incident_list,'opened','less',1)
+openedlast_24 = SN_DO::INC.count_datediff(incident_list,'opened_at','less',1)
 puts "New incidents last 24hrs #{openedlast_24}"
 
 #how to get a count of incidents by datediff and the value opened is more then 7
 #SN_DO::INC.count_datediff(array, query_param, operator, diff)
-olderthen7days = SN_DO::INC.count_datediff(incident_list,'opened','more',7)
+olderthen7days = SN_DO::INC.count_datediff(incident_list,'opened_at','more',7)
 puts "Total incidents older then 7 days #{olderthen7days}"
 
 #how to get a count of incidents by datediff and the value updated is more then 7
 #SN_DO::INC.count_datediff(array, query_param, operator, diff)
-notupdated7days = SN_DO::INC.count_datediff(incident_list,'updated','more',7)
+notupdated7days = SN_DO::INC.count_datediff(incident_list,'sys_updated_on','more',7)
 puts "Total incidents not updated in 7 days #{notupdated7days}"
 
 #how to get the details of incidents by datediff and the value updated is more then 7
 #SN_DO::INC.details_datediff(array, query_param, operator, diff)
-notupdated7days_details = SN_DO::INC.details_datediff(incident_list,'updated','more',7)
+notupdated7days_details = SN_DO::INC.details_datediff(incident_list,'sys_updated_on','more',7)
 
 #Now we are going to add a url to each hash based on sys_id within the details we just got
 notupdated7days_details.each do |inc|
